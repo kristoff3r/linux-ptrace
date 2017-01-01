@@ -10,8 +10,9 @@ genStruct :: String -> [String] -> Q Type -> Q [Dec]
 genStruct name ctors elemType = do
   let name' = mkName name
   elemType' <- elemType
-  varsAndTypes <- mapM (\n -> varStrictType (mkName n) (strictType notStrict elemType)) ctors
-  let typeDecl = DataD [{-context-}] name' [{-tyvars-}] [RecC name' varsAndTypes] [{-deriving-}''Show]
+  varsAndTypes <- mapM (\n -> varBangType (mkName n) (bangType notStrict elemType)) ctors
+  contextQ <- mapM conT [{-deriving-}''Show]
+  let typeDecl = DataD [{-context-}] name' [{-tyvars-}] Nothing [RecC name' varsAndTypes] contextQ
   -- Could evaluate this now, but what happens if we're cross-compiling? Is CInt the target's size, or ours?
   let elemSize = [|sizeOf (undefined :: $(elemType))|]
 
